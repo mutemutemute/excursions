@@ -3,6 +3,12 @@ const {
   getExcursions,
   getRegistrations,
   registerUser,
+  updateExcursion,
+  deleteExcursion,
+  getExcursionsByUser,
+  updateRegistration,
+  deleteRegistration,
+  leaveReview
 } = require("../models/excursionModel");
 
 exports.createNewExcursion = async (req, res, next) => {
@@ -63,6 +69,30 @@ exports.getAllExcursions = async (req, res, next) => {
   }
 };
 
+exports.updateThisExcursion = async (req, res, next) => {
+  const { id } = req.params;
+  const updatedData = req.body;
+  try {
+    const updatedExcursion = await updateExcursion(id,updatedData);
+    res.status(200).json({
+      status: "success",
+      data: updatedExcursion,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+exports.deleteThisExcursion = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    await deleteExcursion(id);
+    res.status(200).send();
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getAllRegistrations = async (req, res, next) => {
   try {
     let { page, limit } = req.query;
@@ -97,3 +127,65 @@ exports.registerUserToExcursion = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.updateThisRegistration = async (req, res, next) => {
+  const { id } = req.params;
+  const { date, time } = req.body; 
+
+  try {
+    const updatedExcursion = await updateRegistration(id, date, time);
+    res.status(200).json({
+      status: "success",
+      data: updatedExcursion,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteThisRegistration = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    await deleteRegistration(id);
+    res.status(200).send();
+  } catch (error) {
+    next(error);
+  }
+}
+
+
+exports.getAllExcursionsByUser = async (req, res, next) => {
+  try {
+    const {id} = req.params;
+    let { page, limit } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    const offset = (page - 1) * limit;
+    const excursions = await getExcursionsByUser(id, limit, offset);
+    res.status(200).json({
+      status: "success",
+      data: excursions,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.leaveNewReview = async (req, res, next) => {
+  
+  try {
+    const review = {
+      ...req.body,
+      user_id: req.user.id,
+    };
+    const newReview = await leaveReview(review);
+    res.status(200).json({
+      status: "success",
+      data: newReview,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
