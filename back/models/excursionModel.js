@@ -112,10 +112,31 @@ exports.getExcursions = async (name, date, limit, offset) => {
   return result;
 };
 
-exports.getRegistrations = async () => {
+exports.getRegistrations = async (limit, offset) => {
   const registrations = await sql`
-SELECT registrations.*, users.id AS user_id, users.username, users.email
+SELECT registrations.*,excursions.name AS excursion_name, excursion_dates.date, excursion_dates.time, users.id AS user_id, users.username, users.email
 FROM registrations
 JOIN users ON registrations.user_id = users.id
+JOIN excursion_dates ON registrations.excursion_date_id = excursion_dates.id
+JOIN excursions ON excursion_dates.excursion_id = excursions.id
+ ${
+   !isNaN(limit) && !isNaN(offset)
+     ? sql`LIMIT ${limit} OFFSET ${offset}`
+     : sql``
+ }
 `;
+  const [totalRegistrations] = await sql`
+SELECT COUNT(registrations.id) AS total
+FROM registrations`;
+  const total_count = totalRegistrations.total;
+  return { registrations, total_count };
+};
+
+exports.registerUser = async (newRegistration) => {
+  const [registration] = await sql`
+    INSERT INTO registrations ${sql(newRegistration, "excursion_id", "user_id", "excursion_date_id", "status")}
+    RETURNING *;
+    `;
+
+  return registration;
 };

@@ -1,4 +1,9 @@
-const { createExcursion, getExcursions } = require("../models/excursionModel");
+const {
+  createExcursion,
+  getExcursions,
+  getRegistrations,
+  registerUser,
+} = require("../models/excursionModel");
 
 exports.createNewExcursion = async (req, res, next) => {
   try {
@@ -35,8 +40,13 @@ exports.getAllExcursions = async (req, res, next) => {
 
     const offset = (page - 1) * limit;
 
-    const { allExcursions, total_count } = await getExcursions(name, date, limit, offset);
-    
+    const { allExcursions, total_count } = await getExcursions(
+      name,
+      date,
+      limit,
+      offset
+    );
+
     if (!Array.isArray(allExcursions)) {
       throw new Error("Database query did not return an array");
     }
@@ -53,3 +63,37 @@ exports.getAllExcursions = async (req, res, next) => {
   }
 };
 
+exports.getAllRegistrations = async (req, res, next) => {
+  try {
+    let { page, limit } = req.query;
+
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    const offset = (page - 1) * limit;
+    const registrations = await getRegistrations(limit, offset);
+    res.status(200).json({
+      status: "success",
+      data: registrations,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.registerUserToExcursion = async (req, res, next) => {
+  try {
+    const newRegistration = {
+      ...req.body,
+      status: "Pending",
+      user_id: req.user.id,
+    };
+    const registration = await registerUser(newRegistration);
+    res.status(201).json({
+      status: "success",
+      data: registration,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
