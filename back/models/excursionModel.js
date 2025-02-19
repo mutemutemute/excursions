@@ -46,69 +46,67 @@ exports.getExcursions = async (name, date, limit, offset) => {
   const excursionDateFilter = date ? `%${date}%` : null;
 
   const result = await sql.begin(async (sql) => {
-    let allExcursions = await sql`
-      SELECT excursions.*, categories.name AS category_name
+    let excursions = sql`
+      SELECT excursions.*, categories.name AS category_name, 
+             json_agg(
+               json_build_object(
+                 'id', excursion_dates.id,
+                 'date', excursion_dates.date,
+                 'time', excursion_dates.time
+               ) ORDER BY excursion_dates.date
+             ) AS dates
       FROM excursions
       JOIN categories ON excursions.category_id = categories.id
-      ORDER BY excursions.id
-      ${
-        !isNaN(limit) && !isNaN(offset)
-          ? sql`LIMIT ${limit} OFFSET ${offset}`
-          : sql``
-      }
+      LEFT JOIN excursion_dates ON excursions.id = excursion_dates.excursion_id
     `;
+    let total_count = null;
 
-    if (excursionNameFilter) {
-      allExcursions = await sql`
-        SELECT excursions.*, categories.name AS category_name
-        FROM excursions
-        JOIN categories ON excursions.category_id = categories.id
+    if (excursionNameFilter && excursionDateFilter) {
+      excursions = sql`${excursions}
         WHERE excursions.name ILIKE ${excursionNameFilter}
-        ORDER BY excursions.id
-        ${
-          !isNaN(limit) && !isNaN(offset)
-            ? sql`LIMIT ${limit} OFFSET ${offset}`
-            : sql``
-        }
+        AND excursion_dates.date::text ILIKE ${excursionDateFilter}
       `;
-    }
-
-    const excursionDates = excursionDateFilter
-      ? await sql`
-          SELECT excursion_dates.*
-          FROM excursion_dates
-          WHERE excursion_dates.date::text ILIKE ${excursionDateFilter}
-        `
-      : await sql`
-          SELECT excursion_dates.*
-          FROM excursion_dates
+      const [totalExcursions] = await sql`
+        SELECT COUNT(*) AS total
+        FROM excursions
+        JOIN excursion_dates ON excursions.id = excursion_dates.excursion_id
+        WHERE excursions.name ILIKE ${excursionNameFilter}
+        AND excursion_dates.date::text ILIKE ${excursionDateFilter}
         `;
+      total_count = totalExcursions.total;
+    } else if (excursionNameFilter) {
+      excursions = sql`${excursions}
+        WHERE excursions.name ILIKE ${excursionNameFilter}
+      `;
+      const [totalExcursions] = await sql`
+        SELECT COUNT(*) AS total
+        FROM excursions
+        WHERE excursions.name ILIKE ${excursionNameFilter}
+        `;
+      total_count = totalExcursions.total;
+    } else if (excursionDateFilter) {
+      excursions = sql`${excursions}
+        WHERE excursion_dates.date::text ILIKE ${excursionDateFilter}
 
-    if (excursionDateFilter) {
-      const matchingExcursionIds = excursionDates.map((d) => d.excursion_id);
-      allExcursions = allExcursions.filter((exc) =>
-        matchingExcursionIds.includes(exc.id)
-      );
-
-      if (allExcursions.length === 0) {
-        return {
-          allExcursions: [],
-          excursionDates: [],
-          registrations: [],
-          total_count: 0,
-        };
-      }
+      `;
+      const [totalExcursions] = await sql`
+        SELECT COUNT(*) AS total
+        FROM excursions
+        JOIN excursion_dates ON excursions.id = excursion_dates.excursion_id
+        WHERE excursion_dates.date::text ILIKE ${excursionDateFilter}
+        `;
+      total_count = totalExcursions.total;
     }
 
-    const registrations = await sql`
-      SELECT registrations.*, users.id AS user_id, users.username, users.email
-      FROM registrations
-      JOIN users ON registrations.user_id = users.id
+    excursions = sql`${excursions}
+      GROUP BY excursions.id, categories.name
+      ORDER BY excursions.id
+      ${!isNaN(limit) && !isNaN(offset) ? sql`LIMIT ${limit} OFFSET ${offset}` : sql``}
     `;
 
-    const total_count = allExcursions.length;
+    const allExcursions = await excursions;
 
-    return { allExcursions, excursionDates, registrations, total_count };
+    return { allExcursions, total_count };
   });
 
   return result;
