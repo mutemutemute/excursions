@@ -28,39 +28,40 @@ exports.createNewExcursion = async (req, res, next) => {
 
 exports.getAllExcursions = async (req, res, next) => {
   try {
-    const { excursions, excursionDates, registrations } = await getExcursions();
+    let { name, date, page, limit } = req.query;
 
-    if (!Array.isArray(excursions)) {
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    const offset = (page - 1) * limit;
+
+    const { allExcursions, excursionDates, total_count } = await getExcursions(name, date, limit, offset);
+
+    if (!Array.isArray(allExcursions)) {
       throw new Error("Database query did not return an array");
     }
 
-    const allExcursions = excursions.map((excursion) => {
+    const excursions = allExcursions.map((excursion) => {
       return {
         ...excursion,
         category_name: excursion.category_name,
         dates: excursionDates
-          .filter((date) => date.excursion_id === excursion.id)
+          .filter((date) => Number(date.excursion_id) === Number(excursion.id))
           .map((date) => ({
             id: date.id,
             date: date.date,
             time: date.time,
           })),
-        registrations: registrations
-          .filter((reg) => reg.excursion_id === excursion.id)
-          .map((reg) => ({
-            user: {
-              id: reg.user_id,
-              username: reg.username,
-              email: reg.email,
-            },
-            status: reg.status,
-          })),
+        
       };
     });
 
     res.status(200).json({
-      status: "success",
-      data: allExcursions,
+      status: "success", 
+      
+      data: {excursions,
+        total_count: total_count,
+      }
     });
   } catch (error) {
     next(error);
