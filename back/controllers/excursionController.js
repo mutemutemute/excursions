@@ -8,7 +8,7 @@ const {
   getExcursionsByUser,
   updateRegistration,
   deleteRegistration,
-  leaveReview
+  leaveReview,
 } = require("../models/excursionModel");
 
 exports.createNewExcursion = async (req, res, next) => {
@@ -73,7 +73,7 @@ exports.updateThisExcursion = async (req, res, next) => {
   const { id } = req.params;
   const updatedData = req.body;
   try {
-    const updatedExcursion = await updateExcursion(id,updatedData);
+    const updatedExcursion = await updateExcursion(id, updatedData);
     res.status(200).json({
       status: "success",
       data: updatedExcursion,
@@ -81,7 +81,7 @@ exports.updateThisExcursion = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-}
+};
 
 exports.deleteThisExcursion = async (req, res, next) => {
   const { id } = req.params;
@@ -130,7 +130,7 @@ exports.registerUserToExcursion = async (req, res, next) => {
 
 exports.updateThisRegistration = async (req, res, next) => {
   const { id } = req.params;
-  const { date, time } = req.body; 
+  const { date, time } = req.body;
 
   try {
     const updatedExcursion = await updateRegistration(id, date, time);
@@ -151,12 +151,11 @@ exports.deleteThisRegistration = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-}
-
+};
 
 exports.getAllExcursionsByUser = async (req, res, next) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
     let { page, limit } = req.query;
     page = parseInt(page);
     limit = parseInt(limit);
@@ -173,7 +172,6 @@ exports.getAllExcursionsByUser = async (req, res, next) => {
 };
 
 exports.leaveNewReview = async (req, res, next) => {
-  
   try {
     const review = {
       ...req.body,
@@ -187,5 +185,4 @@ exports.leaveNewReview = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-}
-
+};

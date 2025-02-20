@@ -233,7 +233,7 @@ exports.getExcursionsByUser = async (id, limit, offset) => {
         : sql``
     }
   `;
-  const totalExcursions = await sql`
+  const [totalExcursions] = await sql`
     SELECT COUNT(*) AS total
     FROM excursions
     JOIN excursion_dates ON excursions.id = excursion_dates.excursion_id
