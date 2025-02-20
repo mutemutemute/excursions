@@ -16,7 +16,7 @@ const validateNewUser = [
       if (user) {
         throw new Error("User with this email already exists");
       }
-      return true; // Validation passed
+      return true; 
     }),
 
   body("username").trim().notEmpty().withMessage("Username is required"),

@@ -2,28 +2,18 @@ const { sql } = require("../dbConnection");
 
 exports.createExcursion = async (newExcursion) => {
   const result = await sql.begin(async (sql) => {
-    const [category] = await sql`
-        SELECT categories.* FROM categories WHERE name = ${newExcursion.category_type};
-    `;
-
-    if (!category) {
-      throw new Error(`Category '${newExcursion.category_type}' not found.`);
-    }
-
-    const fullExcursion = { ...newExcursion, category_id: category.id };
-
     const [excursion] = await sql`
-        INSERT INTO excursions ${sql(fullExcursion, "name", "image_url", "duration", "price", "user_rating", "category_id", "description")}
+        INSERT INTO excursions ${sql(newExcursion, "name", "image_url", "duration", "price", "user_rating", "category_id", "description")}
         RETURNING *;
         `;
 
-    if (!Array.isArray(fullExcursion.dates)) {
+    if (!Array.isArray(newExcursion.dates)) {
       throw new Error("Dates must be an array");
     }
 
     const dates = await sql`
         INSERT INTO excursion_dates ${sql(
-          fullExcursion.dates.map((d) => ({
+          newExcursion.dates.map((d) => ({
             excursion_id: excursion.id,
             date: d.date,
             time: d.time,
@@ -35,7 +25,7 @@ exports.createExcursion = async (newExcursion) => {
         RETURNING *;
     `;
 
-    return { excursion, dates, category };
+    return { excursion, dates };
   });
 
   return result;
@@ -185,11 +175,15 @@ exports.registerUser = async (newRegistration) => {
   return registration;
 };
 
-exports.updateRegistration = async (id, updatedRegistration, isAdmin = false) => {
+exports.updateRegistration = async (
+  id,
+  updatedRegistration,
+  isAdmin = false
+) => {
   let updatedFields;
 
   if (isAdmin) {
-     //if admin wants to update everything
+    //if admin wants to update everything
     // const columns = Object.keys(updatedRegistration);
     // [updatedFields] = await sql`
     //   UPDATE registrations
@@ -197,7 +191,7 @@ exports.updateRegistration = async (id, updatedRegistration, isAdmin = false) =>
     //   WHERE id = ${id}
     //   RETURNING *;
     // `;
-    
+
     if (!updatedRegistration.status) {
       throw new Error("Admins can only update 'status'");
     }
@@ -209,7 +203,6 @@ exports.updateRegistration = async (id, updatedRegistration, isAdmin = false) =>
       RETURNING *;
     `;
   } else {
-    
     if (!updatedRegistration.excursion_date_id) {
       throw new Error("Regular users can only update 'excursion_date_id'");
     }
@@ -224,7 +217,6 @@ exports.updateRegistration = async (id, updatedRegistration, isAdmin = false) =>
 
   return updatedFields;
 };
-
 
 exports.deleteRegistration = async (id) => {
   const [registration] = await sql`
@@ -264,28 +256,60 @@ exports.getExcursionsByUser = async (id, limit, offset) => {
 };
 
 exports.leaveReview = async (newReview) => {
-  const [excursion] = await sql`
-    SELECT id FROM excursions WHERE name = ${newReview.excursion_name};
-  `;
-
-  if (!excursion) {
-    throw new Error("Excursion not found");
-  }
-
+  const reviewData = {
+    ...newReview,
+    comment: newReview.comment || null,
+  };
   const [review] = await sql`
-    INSERT INTO reviews ${sql(
-      {
-        ...newReview,
-        excursion_id: excursion.id,
-      },
-      "excursion_id",
-      "name",
-      "user_id",
-      "rating",
-      "comment"
-    )}
-    RETURNING *;
-  `;
-
+        INSERT INTO reviews ${sql(reviewData, "excursion_id", "name", "user_id", "rating", "comment")}
+        RETURNING *;
+        `;
   return review;
+};
+
+exports.getCategoryId = async (id) => {
+  const [category] = await sql`
+  SELECT categories.*
+  FROM categories 
+  WHERE categories.id = ${id};
+  `;
+  return category;
+};
+
+exports.getExcursionById = async (id) => {
+  const [excursion] = await sql`
+  SELECT excursions.*
+  FROM excursions 
+  WHERE excursions.id = ${id};
+  `;
+  return excursion;
+};
+
+exports.getUserWithRegistrations = async (id) => {
+  const [user] = await sql`
+  SELECT users.*, registrations.excursion_date_id
+  FROM users 
+  JOIN registrations ON users.id = registrations.user_id
+  WHERE users.id = ${id};
+  `;
+  return user;
+};
+
+exports.getRegistrationById = async (id) => {
+  const [registration] = await sql`
+  SELECT registrations.*
+  FROM registrations 
+  WHERE registrations.id = ${id};
+  `;
+  return registration;
+};
+
+exports.getExcursionDateById = async (id) => {
+  const [excursionDate] = await sql`
+  SELECT excursion_dates.*
+  FROM excursion_dates 
+  WHERE excursion_dates.id = ${id};
+  `;
+  console.log(excursionDate);
+  return excursionDate;
 };
