@@ -129,11 +129,30 @@ exports.registerUserToExcursion = async (req, res, next) => {
 };
 
 exports.updateThisRegistration = async (req, res, next) => {
-  const { id } = req.params;
-  const { date, time } = req.body;
+  const { id } = req.params; 
+  const { excursion_date_id, status } = req.body; 
+
+  const isAdmin = req.user && req.user.role === 'admin'; 
 
   try {
-    const updatedExcursion = await updateRegistration(id, date, time);
+    let updatedData;
+
+    if (isAdmin) {
+      
+      if (!status) {
+        return res.status(400).json({ status: "fail", message: "Admins can only update the status." });
+      }
+      updatedData = { status };
+    } else {
+      
+      if (!excursion_date_id) {
+        return res.status(400).json({ status: "fail", message: "Users can only update the excursion date." });
+      }
+      updatedData = { excursion_date_id };
+    }
+
+    const updatedExcursion = await updateRegistration(id, updatedData, isAdmin);
+
     res.status(200).json({
       status: "success",
       data: updatedExcursion,
@@ -142,6 +161,8 @@ exports.updateThisRegistration = async (req, res, next) => {
     next(error);
   }
 };
+
+
 
 exports.deleteThisRegistration = async (req, res, next) => {
   const { id } = req.params;

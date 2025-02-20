@@ -185,28 +185,46 @@ exports.registerUser = async (newRegistration) => {
   return registration;
 };
 
-exports.updateRegistration = async (id, newDate, newTime) => {
-  const [dateRecord] = await sql`
-      SELECT id FROM excursion_dates WHERE date = ${newDate}
-      AND time = ${newTime}
-      AND excursion_id = ${id}
+exports.updateRegistration = async (id, updatedRegistration, isAdmin = false) => {
+  let updatedFields;
 
-      ;
-    `;
+  if (isAdmin) {
+     //if admin wants to update everything
+    // const columns = Object.keys(updatedRegistration);
+    // [updatedFields] = await sql`
+    //   UPDATE registrations
+    //   SET ${sql(updatedRegistration, ...columns)}
+    //   WHERE id = ${id}
+    //   RETURNING *;
+    // `;
+    
+    if (!updatedRegistration.status) {
+      throw new Error("Admins can only update 'status'");
+    }
 
-  if (!dateRecord) {
-    throw new Error("Date not found in excursion_dates");
-  }
-
-  const [excursion] = await sql`
+    [updatedFields] = await sql`
       UPDATE registrations
-      SET excursion_date_id = ${dateRecord.id}
+      SET status = ${updatedRegistration.status}
       WHERE id = ${id}
       RETURNING *;
     `;
+  } else {
+    
+    if (!updatedRegistration.excursion_date_id) {
+      throw new Error("Regular users can only update 'excursion_date_id'");
+    }
 
-  return excursion;
+    [updatedFields] = await sql`
+      UPDATE registrations
+      SET excursion_date_id = ${updatedRegistration.excursion_date_id}
+      WHERE id = ${id}
+      RETURNING *;
+    `;
+  }
+
+  return updatedFields;
 };
+
 
 exports.deleteRegistration = async (id) => {
   const [registration] = await sql`
