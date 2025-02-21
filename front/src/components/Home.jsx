@@ -1,10 +1,14 @@
 import Navbar from "./Navbar";
-
+import Excursions from "./Excursions";
+import Pagination from "./Pagination";
 const Home = () => {
   return (
     <>
       <Navbar />
-      <h1>Home</h1>
+      <div className="pt-5">
+        <Excursions />
+      </div>
+      <div className="pt-10"><Pagination /></div>
     </>
   );
 };
