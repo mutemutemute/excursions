@@ -10,6 +10,7 @@ const ExcursionContextProvider = ({ children }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1); 
   const [itemsPerPage, setItemsPerPage] = useState(5); 
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     const fetchExcursions = async (search = "", date = "") => {
@@ -26,12 +27,11 @@ const ExcursionContextProvider = ({ children }) => {
           params,
           withCredentials: true,
         });
-console.log(response)
+
         const excursionsArray = response?.data?.excursions || [];
         const totalCount = Number(response?.data?.total_count) || 0;
 
-        console.log(excursionsArray);
-        console.log(totalCount);
+       
         if (Array.isArray(excursionsArray)) {
           setExcursions({
             list: excursionsArray,
@@ -48,6 +48,10 @@ console.log(response)
     fetchExcursions(searchTerm);
   }, [searchTerm, currentPage, itemsPerPage]); 
 
+  const update = () => {
+    window.location.reload();
+  };
+
   return (
     <ExcursionContext.Provider
       value={{
@@ -61,6 +65,9 @@ console.log(response)
         setCurrentPage,
         itemsPerPage,
         setItemsPerPage,
+        showForm,
+        setShowForm,
+        update
       }}
     >
       {children}
