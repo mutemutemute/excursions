@@ -3,6 +3,7 @@ const { getCategoryId } = require("../models/excursionModel");
 const imgUrlRegex =
   /^https?:\/\/.*\.(?:png|jpg|jpeg|gif|bmp|svg|webp|tiff)(\?.*)?$/;
 const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/;
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 const validateUpdateExcursion = [
   body("name")
     .trim()
@@ -57,6 +58,23 @@ const validateUpdateExcursion = [
     .optional()
     .isString()
     .withMessage("Description must be a string"),
+
+  body("dates").optional().isArray().withMessage("Dates must be an array"),
+
+  body("dates.*.id")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Each date object must have a valid positive integer 'id'"),
+
+  body("dates.*.date")
+    .optional()
+    .matches(dateRegex)
+    .withMessage("Date must be in the format YYYY-MM-DD"),
+
+  body("dates.*.time")
+    .optional()
+    .matches(timeRegex)
+    .withMessage("Time must be in the format HH:MM:SS"),
 ];
 
 module.exports = validateUpdateExcursion;

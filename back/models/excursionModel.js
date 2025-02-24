@@ -125,16 +125,39 @@ exports.getExcursions = async (name, date, limit, offset) => {
 };
 
 exports.updateExcursion = async (id, updatedExcursion) => {
-  const columns = Object.keys(updatedExcursion);
-  const [excursion] = await sql`
+  const result = await sql.begin(async (sql) => {
+    
+    const excursionColumns = Object.keys(updatedExcursion).filter(key => key !== 'dates');
+
+    
+    const [excursion] = await sql`
       UPDATE excursions
-      SET ${sql(updatedExcursion, ...columns)}
+      SET ${sql(updatedExcursion, ...excursionColumns)}
       WHERE id = ${id}
       RETURNING *;
     `;
 
-  return excursion;
+    
+    let updatedDates = [];
+    if (updatedExcursion.dates && updatedExcursion.dates.length > 0) {
+      for (const date of updatedExcursion.dates) {
+        const [updatedDate] = await sql`
+          UPDATE excursion_dates
+          SET date = ${date.date}, time = ${date.time}
+          WHERE id = ${date.id}
+          RETURNING *;
+        `;
+        updatedDates.push(updatedDate);
+      }
+    }
+
+    return { excursion, dates: updatedDates };
+  });
+
+  return result;
 };
+
+
 
 exports.deleteExcursion = async (id) => {
   const [excursion] = await sql`
@@ -276,14 +299,26 @@ exports.getCategoryId = async (id) => {
   return category;
 };
 
-exports.getExcursionById = async (id) => {
+exports.getExcursionByIdModel = async (id) => {
   const [excursion] = await sql`
-  SELECT excursions.*
-  FROM excursions 
-  WHERE excursions.id = ${id};
+    SELECT excursions.*, 
+           categories.name AS category_name,
+           jsonb_agg(
+             DISTINCT jsonb_build_object(
+               'id', excursion_dates.id,
+               'date', excursion_dates.date,
+               'time', excursion_dates.time
+             )
+           ) FILTER (WHERE excursion_dates.id IS NOT NULL) AS dates
+    FROM excursions
+    JOIN categories ON excursions.category_id = categories.id
+    LEFT JOIN excursion_dates ON excursions.id = excursion_dates.excursion_id
+    WHERE excursions.id = ${id}
+    GROUP BY excursions.id, categories.name;
   `;
   return excursion;
 };
+
 
 exports.getUserWithRegistrations = async (id) => {
   const [user] = await sql`
@@ -310,6 +345,6 @@ exports.getExcursionDateById = async (id) => {
   FROM excursion_dates 
   WHERE excursion_dates.id = ${id};
   `;
-  console.log(excursionDate);
+  
   return excursionDate;
 };

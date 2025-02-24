@@ -9,6 +9,7 @@ const {
   updateRegistration,
   deleteRegistration,
   leaveReview,
+  getExcursionByIdModel,
 } = require("../models/excursionModel");
 
 exports.createNewExcursion = async (req, res, next) => {
@@ -62,6 +63,19 @@ exports.getAllExcursions = async (req, res, next) => {
         excursions: allExcursions,
         total_count: total_count,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getExcursionById = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const excursion = await getExcursionByIdModel(id);
+    res.status(200).json({
+      status: "success",
+      data: excursion,
     });
   } catch (error) {
     next(error);
@@ -138,22 +152,18 @@ exports.updateThisRegistration = async (req, res, next) => {
 
     if (isAdmin) {
       if (!status) {
-        return res
-          .status(400)
-          .json({
-            status: "fail",
-            message: "Admins can only update the status.",
-          });
+        return res.status(400).json({
+          status: "fail",
+          message: "Admins can only update the status.",
+        });
       }
       updatedData = { status };
     } else {
       if (!excursion_date_id) {
-        return res
-          .status(400)
-          .json({
-            status: "fail",
-            message: "Users can only update the excursion date.",
-          });
+        return res.status(400).json({
+          status: "fail",
+          message: "Users can only update the excursion date.",
+        });
       }
       updatedData = { excursion_date_id };
     }

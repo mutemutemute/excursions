@@ -1,7 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { FaStar } from "react-icons/fa";
+import ExcursionContext from "../contexts/ExcursionContext";
+import UserContext from "../contexts/UserContext";
+import {Link} from "react-router";
+import axios from "axios";
+import { FaEdit } from "react-icons/fa";
+import { FaRegTrashCan } from "react-icons/fa6";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const ExcursionCard = ({ excursion }) => {
+  const { user } = useContext(UserContext);
+  const {setError, setExcursions, update} = useContext(ExcursionContext);
   const {
     id,
     name,
@@ -30,6 +40,33 @@ const ExcursionCard = ({ excursion }) => {
       document.body.style.overflow = "auto";
     };
   }, [showModal]);
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this excursion?"
+    );
+  
+    if (!confirmed) return; 
+  
+    try {
+      await axios.delete(`${API_URL}/excursions/${id}`, {
+        withCredentials: true,
+      });
+  
+      
+      setExcursions((prev) => ({
+        ...prev,
+        list: prev.list.filter((excursion) => excursion.id !== id),
+      }));
+  
+      window.alert("Excursion deleted successfully!");
+      update();
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+  
+
 
   return (
     <div className="border border-gray-200 p-4 rounded shadow-md">
@@ -124,6 +161,14 @@ const ExcursionCard = ({ excursion }) => {
           </div>
         </div>
       )}
+
+{user?.role === "admin" &&(
+      <div className="pt-2"><button
+          onClick={handleDelete}
+          className="text-[#42416f] border border-[#42416f] rounded-sm p-1"
+        >
+          <FaRegTrashCan size={22} />
+        </button></div>)}
     </div>
   );
 };
