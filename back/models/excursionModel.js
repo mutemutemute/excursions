@@ -126,10 +126,11 @@ exports.getExcursions = async (name, date, limit, offset) => {
 
 exports.updateExcursion = async (id, updatedExcursion) => {
   const result = await sql.begin(async (sql) => {
-    
-    const excursionColumns = Object.keys(updatedExcursion).filter(key => key !== 'dates');
+    //Update the main excursion record (excluding 'dates')
+    const excursionColumns = Object.keys(updatedExcursion).filter(
+      (key) => key !== "dates"
+    );
 
-    
     const [excursion] = await sql`
       UPDATE excursions
       SET ${sql(updatedExcursion, ...excursionColumns)}
@@ -137,16 +138,52 @@ exports.updateExcursion = async (id, updatedExcursion) => {
       RETURNING *;
     `;
 
-    
+    // Fetch all existing date IDs for this excursion
+    const existingDateRows = await sql`
+      SELECT id
+      FROM excursion_dates
+      WHERE excursion_id = ${id};
+    `;
+    const existingDateIds = new Set(existingDateRows.map((row) => row.id));
+
+    // Build a set of IDs from the new payload (for existing dates)
+    const payloadIds = new Set(
+      (updatedExcursion.dates || [])
+        .filter((d) => d.id && parseInt(d.id, 10) > 0)
+        .map((d) => parseInt(d.id, 10))
+    );
+
+    // Delete any date that no longer appears in the payload
+    for (const existingId of existingDateIds) {
+      if (!payloadIds.has(existingId)) {
+        await sql`
+          DELETE FROM excursion_dates
+          WHERE id = ${existingId}
+        `;
+      }
+    }
+
+    // Update or insert dates
     let updatedDates = [];
     if (updatedExcursion.dates && updatedExcursion.dates.length > 0) {
       for (const date of updatedExcursion.dates) {
-        const [updatedDate] = await sql`
-          UPDATE excursion_dates
-          SET date = ${date.date}, time = ${date.time}
-          WHERE id = ${date.id}
-          RETURNING *;
-        `;
+        let updatedDate;
+        if (date.id && parseInt(date.id, 10) > 0) {
+          // Update existing
+          [updatedDate] = await sql`
+            UPDATE excursion_dates
+            SET date = ${date.date}, time = ${date.time}
+            WHERE id = ${date.id}
+            RETURNING *;
+          `;
+        } else {
+          // Insert new
+          [updatedDate] = await sql`
+            INSERT INTO excursion_dates (excursion_id, date, time)
+            VALUES (${id}, ${date.date}, ${date.time})
+            RETURNING *;
+          `;
+        }
         updatedDates.push(updatedDate);
       }
     }
@@ -156,6 +193,8 @@ exports.updateExcursion = async (id, updatedExcursion) => {
 
   return result;
 };
+
+
 
 
 

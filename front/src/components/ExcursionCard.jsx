@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import { FaStar } from "react-icons/fa";
 import ExcursionContext from "../contexts/ExcursionContext";
 import UserContext from "../contexts/UserContext";
-import {Link} from "react-router";
+import { Link } from "react-router";
 import axios from "axios";
 import { FaEdit } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
@@ -11,7 +11,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 const ExcursionCard = ({ excursion }) => {
   const { user } = useContext(UserContext);
-  const {setError, setExcursions, update} = useContext(ExcursionContext);
+  const { setError, setExcursions, update } = useContext(ExcursionContext);
   const {
     id,
     name,
@@ -45,36 +45,41 @@ const ExcursionCard = ({ excursion }) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this excursion?"
     );
-  
-    if (!confirmed) return; 
-  
+
+    if (!confirmed) return;
+
     try {
       await axios.delete(`${API_URL}/excursions/${id}`, {
         withCredentials: true,
       });
-  
-      
+
       setExcursions((prev) => ({
         ...prev,
         list: prev.list.filter((excursion) => excursion.id !== id),
       }));
-  
+
       window.alert("Excursion deleted successfully!");
       update();
     } catch (error) {
       setError(error.message);
     }
   };
-  
-
 
   return (
     <div className="border border-gray-200 p-4 rounded shadow-md">
       <h2 className="text-xl font-bold">{name}</h2>
-      <img src={image_url} alt={name} className="my-2 w-70 h-50 lg:w-100 lg:h-70 object-cover" />
-      
-      <p><span className="font-semibold">Duration:</span> {duration}</p>
-      <p><span className="font-semibold">Price:</span> ${price}</p>
+      <img
+        src={image_url}
+        alt={name}
+        className="my-2 w-70 h-50 lg:w-100 lg:h-70 object-cover"
+      />
+
+      <p>
+        <span className="font-semibold">Duration:</span> {duration}
+      </p>
+      <p>
+        <span className="font-semibold">Price:</span> ${price}
+      </p>
       <div className="flex items-center">
         {[1, 2, 3, 4, 5].map((star) => (
           <FaStar
@@ -82,9 +87,12 @@ const ExcursionCard = ({ excursion }) => {
             size={18}
             color={user_rating >= star ? "#ffc107" : "#e4e5e9"}
           />
-        ))}{<p>({user_rating})</p>}
+        ))}
+        {<p>({user_rating})</p>}
       </div>
-      <p><span className="font-semibold">Category:</span> {category_name}</p>
+      <p>
+        <span className="font-semibold">Category:</span> {category_name}
+      </p>
 
       <div className="mt-4">
         <h3 className="font-semibold">Available Dates:</h3>
@@ -104,7 +112,6 @@ const ExcursionCard = ({ excursion }) => {
         <h3 className="font-semibold">Description:</h3>
         <p>{description}</p>
       </div>
-      
 
       <div className="mt-4">
         <h3 className="font-semibold">Reviews:</h3>
@@ -162,13 +169,25 @@ const ExcursionCard = ({ excursion }) => {
         </div>
       )}
 
-{user?.role === "admin" &&(
-      <div className="pt-2"><button
-          onClick={handleDelete}
-          className="text-[#42416f] border border-[#42416f] rounded-sm p-1"
-        >
-          <FaRegTrashCan size={22} />
-        </button></div>)}
+      {user?.role === "admin" && (
+        <div>
+          <div>
+            <Link to={`/edit/${id}`}>
+              <button className="text-[#42416f] border border-[#42416f] rounded-sm p-1">
+                <FaEdit size={22} />
+              </button>
+            </Link>
+          </div>
+          <div className="pt-2">
+            <button
+              onClick={handleDelete}
+              className="text-[#42416f] border border-[#42416f] rounded-sm p-1"
+            >
+              <FaRegTrashCan size={22} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

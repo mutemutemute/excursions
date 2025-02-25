@@ -61,10 +61,7 @@ const validateUpdateExcursion = [
 
   body("dates").optional().isArray().withMessage("Dates must be an array"),
 
-  body("dates.*.id")
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage("Each date object must have a valid positive integer 'id'"),
+  body("dates.*.id").optional(),
 
   body("dates.*.date")
     .optional()

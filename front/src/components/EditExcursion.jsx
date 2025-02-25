@@ -1,22 +1,20 @@
 import { useForm, useFieldArray } from "react-hook-form";
 import axios from "axios";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import ExcursionContext from "../contexts/ExcursionContext";
-import UserContext from "../contexts/UserContext";
+import { useNavigate, useParams, Link } from "react-router";
 import { FaPlus } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const AddExcursion = () => {
-  const { error, setError, setShowForm, setExcursions, update } =
-    useContext(ExcursionContext);
-  const { user } = useContext(UserContext);
+const EditExcursion = () => {
+  const { error, setError, setExcursions } = useContext(ExcursionContext);
 
   const {
     register,
     handleSubmit,
-    reset,
+    setValue,
     control,
     formState: { errors },
   } = useForm({
@@ -30,46 +28,107 @@ const AddExcursion = () => {
     name: "dates",
   });
 
+  const { id } = useParams();
+  const navigate = useNavigate();
+
   const onSubmit = async (formdata) => {
+    const payload = {
+      name: formdata.name || "",
+      image_url: formdata.image_url || "",
+      duration:
+        formdata.duration && formdata.duration.length === 5
+          ? `${formdata.duration}:00`
+          : formdata.duration || "00:00:00",
+      price: formdata.price !== undefined ? parseFloat(formdata.price) : 0,
+      description: formdata.description?.trim() || "",
+      category_id: formdata.category_id
+        ? parseInt(formdata.category_id, 10)
+        : null,
+      dates: formdata.dates.map((d) => ({
+        id: d.id && Number.isInteger(d.id) && d.id > 0 ? d.id : null,
+        date: d.date || null,
+        time:
+          (d.time && d.time.length === 5 ? `${d.time}:00` : d.time) ||
+          "00:00:00",
+      })),
+    };
+
+    console.log("Updating excursion with payload:", payload);
+
     try {
-      const payload = {
-        name: formdata.name,
-        image_url: formdata.image_url,
-        duration:
-          formdata.duration.length === 5
-            ? `${formdata.duration}:00`
-            : formdata.duration,
-        price: parseFloat(formdata.price),
-        description: formdata.description.trim(),
-        category_id: parseInt(formdata.category_id, 10),
-        dates: formdata.dates.map((d) => ({
-          date: d.date,
-          time: d.time.length === 5 ? `${d.time}:00` : d.time,
-        })),
-      };
-     
-      const response = await axios.post(`${API_URL}/excursions`, payload, {
+      await axios.put(`${API_URL}/excursions/${id}`, payload, {
+        headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
 
-      const newExcursion = response.data?.data || response.data || response;
+      const { data: fetchResponse } = await axios.get(`${API_URL}/excursions`, {
+        withCredentials: true,
+      });
 
       setExcursions((prev) => ({
         ...prev,
-        list: [...prev.list, newExcursion],
+        list: fetchResponse.data.excursions,
       }));
-      reset();
-      window.alert("Excursion added successfully!");
 
-      setShowForm(false);
-      update();
+      window.alert("Excursion updated successfully!");
+      navigate("/");
+    } catch (error) {
+      console.error(
+        "PUT request failed:",
+        error.response?.data || error.message
+      );
+      setError(error.response?.data?.message || error.message);
+    }
+  };
+
+  const getExcursion = async () => {
+    try {
+      const { data: response } = await axios.get(
+        `${API_URL}/excursions/${id}`,
+        {
+          withCredentials: true,
+        }
+      );
+
+      const {
+        name,
+        image_url,
+        duration,
+        price,
+        description,
+        dates,
+        category_id,
+      } = response.data;
+
+      setValue("name", name);
+      setValue("image_url", image_url);
+      setValue("duration", duration);
+      setValue("price", price);
+      setValue("description", description);
+      setValue("category_id", category_id);
+
+      setValue(
+        "dates",
+        dates.map((d) => ({
+          id: d.id,
+          date: d.date ? new Date(d.date).toISOString().split("T")[0] : "",
+          time:
+            d.time && d.time.length === 5
+              ? `${d.time}:00`
+              : d.time || "00:00:00",
+        }))
+      );
     } catch (error) {
       setError(error.message);
     }
   };
 
+  useEffect(() => {
+    getExcursion();
+  }, []);
+
   return (
-    <>
+    <div>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="mb-4 flex flex-col space-y-1">
           <label htmlFor="name" className="text-sm ">
@@ -81,9 +140,8 @@ const AddExcursion = () => {
             })}
             type="text"
             placeholder="Excursion Name"
-            className="input input-bordered mt-1 p-2  rounded-md w-full flex-1"
+            className="input input-bordered mt-1 p-2 rounded-md w-full flex-1"
           />
-
           {errors.name && (
             <div className="relative">
               <p className="text-red-500 text-sm absolute whitespace-nowrap top-[-0.2rem]">
@@ -108,7 +166,7 @@ const AddExcursion = () => {
             })}
             type="text"
             placeholder="Image URL"
-            className="input input-bordered mt-1 p-2  rounded-md w-full flex-1"
+            className="input input-bordered mt-1 p-2 rounded-md w-full flex-1"
           />
           {errors.image_url && (
             <div className="relative">
@@ -152,7 +210,7 @@ const AddExcursion = () => {
           <input
             {...register("price", {
               required: "Price is required",
-              valueAsNumber: true, //input value as number
+              valueAsNumber: true,
               min: {
                 value: 0,
                 message: "Price must be greater than 0",
@@ -161,8 +219,8 @@ const AddExcursion = () => {
             type="number"
             placeholder="Price"
             min="0"
-            step="1" //"0.01" if decimals allowed
-            className="mt-1 p-2 input input-bordered rounded-md w-full "
+            step="1" // or "0.01" if decimals are allowed
+            className="mt-1 p-2 input input-bordered rounded-md w-full"
           />
           {errors.price && (
             <div className="relative">
@@ -265,17 +323,21 @@ const AddExcursion = () => {
         </div>
 
         <div className="flex justify-end space-x-2 pt-2 pb-2">
+          <Link to="/">
+            <button className="btn bg-gray-300">Back</button>
+          </Link>
           <button
             type="submit"
-            className="btn px-4 py-2 bg-[#42416f] text-white "
+            className="btn px-4 py-2 bg-[#42416f] text-white"
           >
-            Add Excursion
+            Edit Excursion
           </button>
         </div>
+
         {error && <p className="text-red-500">{error}</p>}
       </form>
-    </>
+    </div>
   );
 };
 
-export default AddExcursion;
+export default EditExcursion;

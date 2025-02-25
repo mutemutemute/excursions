@@ -4,6 +4,7 @@ import Home from './components/Home'
 import LoginForm from './components/LoginForm'
 import SignupForm from './components/SignupForm'
 import NotFound from './components/NotFound'
+import EditExcursion from './components/EditExcursion'
 
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<LoginForm />} />
           <Route path="/signup" element={<SignupForm />} />
+          <Route path="/edit/:id" element={<EditExcursion />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
