@@ -12,6 +12,7 @@ const {
   deleteThisRegistration,
   leaveNewReview,
   getExcursionById,
+  getAllRegistrationsByUser,
 } = require("../controllers/excursionController");
 const validate = require("../validators/validate");
 const router = express.Router();
@@ -69,7 +70,7 @@ router
   .get(protect, validateExcursionId, validate, getExcursionById);
 
 router
-  .route("/registration/:id")
+  .route("/register/:id")
   .put(
     protect,
     validateRegistrationId,
@@ -77,9 +78,11 @@ router
     validate,
     updateThisRegistration
   )
-  .delete(protect, validateRegistrationId, validate, deleteThisRegistration);
-module.exports = router;
+  .delete(protect, validateRegistrationId, validate, deleteThisRegistration)
+  .get(protect, validateUserId, validate, getAllRegistrationsByUser)
+  
 
+  
 router
   .route("/users/:id")
   .get(
@@ -89,3 +92,5 @@ router
     validate,
     getAllExcursionsByUser
   );
+
+  module.exports = router;

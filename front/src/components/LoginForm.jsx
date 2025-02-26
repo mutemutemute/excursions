@@ -24,7 +24,7 @@ function LoginForm() {
         { withCredentials: true }
       );
       setUser(response.data);
-
+      
       navigate("/");
     } catch (error) {
       if (axios.isAxiosError(error)) {

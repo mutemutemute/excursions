@@ -5,6 +5,7 @@ import LoginForm from './components/LoginForm'
 import SignupForm from './components/SignupForm'
 import NotFound from './components/NotFound'
 import EditExcursion from './components/EditExcursion'
+import Registration from './components/Registration'
 
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
           <Route path="/login" element={<LoginForm />} />
           <Route path="/signup" element={<SignupForm />} />
           <Route path="/edit/:id" element={<EditExcursion />} />
+          <Route path="/register" element={<Registration />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -37,7 +37,7 @@ const Navbar = () => {
   return (
     <div className="flex justify-between items-center p-3 bg-[#42416f] text-white">
       <h1 className="text-xl lg:text-3xl text-center">Vivid Excursions</h1>
-
+      <div>{user && <Link to="/register">Registration</Link>}</div>
       <div className="flex items-center ">
         {!user ? (
           <>

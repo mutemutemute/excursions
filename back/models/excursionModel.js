@@ -237,6 +237,28 @@ exports.registerUser = async (newRegistration) => {
   return registration;
 };
 
+exports.getUserRegistrationsModel = async (id, limit, offset) => {
+  const registrations = await sql`
+  SELECT registrations.*,excursions.name AS excursion_name, excursion_dates.date, excursion_dates.time, users.id AS user_id, users.username, users.email
+  FROM registrations
+  JOIN users ON registrations.user_id = users.id
+  JOIN excursion_dates ON registrations.excursion_date_id = excursion_dates.id
+  JOIN excursions ON excursion_dates.excursion_id = excursions.id
+  WHERE registrations.user_id = ${id}
+   ${
+   !isNaN(limit) && !isNaN(offset)
+     ? sql`LIMIT ${limit} OFFSET ${offset}`
+     : sql``
+ }
+  `;
+  const [totalRegistrations] = await sql`
+  SELECT COUNT(registrations.id) AS total
+  FROM registrations
+  WHERE registrations.user_id = ${id}`;
+  const total_count = totalRegistrations.total;
+  return { registrations, total_count };
+}
+
 exports.updateRegistration = async (
   id,
   updatedRegistration,

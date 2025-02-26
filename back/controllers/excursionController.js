@@ -10,6 +10,7 @@ const {
   deleteRegistration,
   leaveReview,
   getExcursionByIdModel,
+  getUserRegistrationsModel
 } = require("../models/excursionModel");
 
 exports.createNewExcursion = async (req, res, next) => {
@@ -123,6 +124,25 @@ exports.getAllRegistrations = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getAllRegistrationsByUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    let { page, limit } = req.query;
+
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    const offset = (page - 1) * limit;
+    const registrations = await getUserRegistrationsModel(id, limit, offset);
+    res.status(200).json({
+      status: "success",
+      data: registrations,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 
 exports.registerUserToExcursion = async (req, res, next) => {
   try {

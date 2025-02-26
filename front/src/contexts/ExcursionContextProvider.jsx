@@ -16,7 +16,7 @@ const ExcursionContextProvider = ({ children }) => {
     const fetchExcursions = async (search = "", date = "") => {
       try {
         const params = {
-          page: currentPage +1,  
+          page: currentPage+1 ,  
           limit: itemsPerPage 
         };
 

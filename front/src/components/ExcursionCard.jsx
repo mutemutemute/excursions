@@ -140,7 +140,7 @@ const ExcursionCard = ({ excursion }) => {
 
       {showModal && (
         <div className="fixed inset-0 bg-gray-200 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-lg max-h-[80vh] shadow-lg relative">
+          <div className="bg-white p-6 rounded-lg w-full max-w-lg shadow-lg relative">
             <h2 className="text-xl font-bold mb-4 text-center">All Reviews</h2>
 
             <div className="overflow-y-auto max-h-[60vh] pr-2">

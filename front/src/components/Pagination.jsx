@@ -22,6 +22,8 @@ const Pagination = () => {
       setCurrentPage(0); 
     }
 
+console.log(currentPage)
+
     setTotalPages(newTotalPages);
   }, [excursions, itemsPerPage, currentPage, setCurrentPage]);
 
