@@ -10,7 +10,6 @@ const RegistrationList = () => {
   const { user } = useContext(UserContext);
 
   const [registrations, setRegistrations] = useState({ list: [], total: 0 });
-  
 
   const isAdmin = user?.role === "admin";
 
@@ -25,8 +24,6 @@ const RegistrationList = () => {
           const { data: response } = await axios.get(url, {
             withCredentials: true,
           });
-
-          console.log("Registrations Data from API:", response);
 
           setRegistrations({
             list: response.data.registrations || [],

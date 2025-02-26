@@ -6,6 +6,7 @@ import UserContext from "../contexts/UserContext";
 import { useContext } from "react";
 import ExcursionContext from "../contexts/ExcursionContext";
 import { FaPlus } from "react-icons/fa";
+import SearchBar from "./SearchBar";
 
 const Home = () => {
   const { user } = useContext(UserContext);
@@ -29,7 +30,7 @@ const Home = () => {
             )}
           </>
         )}
-
+<div><SearchBar /></div>
         <div className="pt-5">
           <Excursions />
         </div>

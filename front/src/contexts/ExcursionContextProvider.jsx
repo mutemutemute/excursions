@@ -8,20 +8,43 @@ const ExcursionContextProvider = ({ children }) => {
   const [excursions, setExcursions] = useState({ list: [], total: 0 });
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1); 
-  const [itemsPerPage, setItemsPerPage] = useState(5); 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     const fetchExcursions = async (search = "", date = "") => {
       try {
         const params = {
-          page: currentPage+1 ,  
-          limit: itemsPerPage 
+          page: currentPage + 1,
+          limit: itemsPerPage,
         };
 
-        if (search) params.name = search;
-        if (date) params.date = date;
+        const trimmedSearch = searchTerm.trim();
+
+        //full date (`YYYY-MM-DD`)
+        const isFullDate = /^\d{4}-\d{2}-\d{2}$/.test(trimmedSearch);
+
+        // partial date (`YYYY-MM` or `YYYY-`)
+        const isYearMonthDayIncomplete = /^\d{4}-\d{2}-\d{0,2}$/.test(
+          trimmedSearch
+        ); // `YYYY-MM-`
+        const isYearOnlyOrYearMonth = /^\d{4}-\d{0,2}$/.test(trimmedSearch); // `YYYY-` or `YYYY-MM`
+
+        // Check if input is ONLY numbers (Year, Month, or Day)
+        const isOnlyNumbers = /^\d+$/.test(trimmedSearch);
+
+        if (isFullDate) {
+          params.date = trimmedSearch; // Send as `date`
+        } else if (isYearMonthDayIncomplete) {
+          params.date = `${trimmedSearch}%`; // Convert `YYYY-MM-` to `YYYY-MM-%`
+        } else if (isYearOnlyOrYearMonth) {
+          params.date = `${trimmedSearch}%`; // Convert `YYYY-` to `YYYY-%`
+        } else if (isOnlyNumbers) {
+          params.date = `${trimmedSearch}%`; // Convert `YYYY` to `YYYY-%`
+        } else {
+          params.name = `%${trimmedSearch}%`; // Send as `name`
+        }
 
         const { data: response } = await axios.get(`${API_URL}/excursions`, {
           params,
@@ -31,7 +54,6 @@ const ExcursionContextProvider = ({ children }) => {
         const excursionsArray = response?.data?.excursions || [];
         const totalCount = Number(response?.data?.total_count) || 0;
 
-       
         if (Array.isArray(excursionsArray)) {
           setExcursions({
             list: excursionsArray,
@@ -46,7 +68,7 @@ const ExcursionContextProvider = ({ children }) => {
     };
 
     fetchExcursions(searchTerm);
-  }, [searchTerm, currentPage, itemsPerPage]); 
+  }, [searchTerm, currentPage, itemsPerPage]);
 
   const update = () => {
     window.location.reload();
@@ -67,7 +89,7 @@ const ExcursionContextProvider = ({ children }) => {
         setItemsPerPage,
         showForm,
         setShowForm,
-        update
+        update,
       }}
     >
       {children}
@@ -76,4 +98,3 @@ const ExcursionContextProvider = ({ children }) => {
 };
 
 export default ExcursionContextProvider;
-

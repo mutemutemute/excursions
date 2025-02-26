@@ -59,7 +59,7 @@ const Registration = () => {
         user_id: user.id,
         excursion_id: data.excursion_id,
         excursion_date_id: data.excursion_date_id,
-        status: "pending",
+        status: "Pending",
       };
 
       await axios.post(`${API_URL}/excursions/register`, payload, {
