@@ -42,6 +42,10 @@ const RegistrationList = ({ allExcursions, refresh }) => {
 
   // deletion of a registration.
   const handleDelete = async (id) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this registration?"
+    );
+    if (!confirmed) return;
     try {
       // DELETE endpoint for a specific registration remains the same.
       await axios.delete(`${API_URL}/excursions/register/${id}`, {
@@ -105,7 +109,9 @@ const RegistrationList = ({ allExcursions, refresh }) => {
                       })
                     }
                   >
-                    {excursion && excursion.dates && excursion.dates.length > 0 ? (
+                    {excursion &&
+                    excursion.dates &&
+                    excursion.dates.length > 0 ? (
                       excursion.dates.map((date) => (
                         <option key={date.id} value={date.id}>
                           {new Date(date.date).toLocaleDateString("en-US")}
