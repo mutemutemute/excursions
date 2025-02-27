@@ -3,6 +3,7 @@ import axios from "axios";
 import { FaRegTrashCan } from "react-icons/fa6";
 import ExcursionContext from "../contexts/ExcursionContext";
 import UserContext from "../contexts/UserContext";
+import Reviews from "./Reviews";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -11,9 +12,10 @@ const RegistrationList = ({ allExcursions, refresh }) => {
   const { user } = useContext(UserContext);
 
   const [registrations, setRegistrations] = useState({ list: [], total: 0 });
+  const [openReviewId, setOpenReviewId] = useState(null);
   const isAdmin = user?.role === "admin";
 
-  // Fetch registrations on mount and when refresh changes.
+  // Fetch registrations on mount and when refresh changes
   useEffect(() => {
     const fetchRegistrations = async () => {
       try {
@@ -40,19 +42,19 @@ const RegistrationList = ({ allExcursions, refresh }) => {
     fetchRegistrations();
   }, [user, isAdmin, refresh, setError]);
 
-  // deletion of a registration.
+  // delete registration
   const handleDelete = async (id) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this registration?"
     );
     if (!confirmed) return;
     try {
-      // DELETE endpoint for a specific registration remains the same.
+      // DELETE endpoint for a specific registration remains the same
       await axios.delete(`${API_URL}/excursions/register/${id}`, {
         withCredentials: true,
       });
 
-      // Re-fetch registrations after deletion.
+      // Re-fetch registrations after deletion
       const updatedUrl = isAdmin
         ? `${API_URL}/excursions/register`
         : `${API_URL}/excursions/users/${user.id}/registrations`;
@@ -73,6 +75,33 @@ const RegistrationList = ({ allExcursions, refresh }) => {
     }
   };
 
+  const handleUpdate = async (id, updates) => {
+    try {
+      await axios.put(`${API_URL}/excursions/register/${id}`, updates, {
+        withCredentials: true,
+      });
+
+      // Re-fetch registrations after update.
+      const updatedUrl = isAdmin
+        ? `${API_URL}/excursions/register`
+        : `${API_URL}/excursions/users/${user.id}/registrations`;
+
+      const { data: updatedResponse } = await axios.get(updatedUrl, {
+        withCredentials: true,
+      });
+
+      setRegistrations({
+        list: updatedResponse.data.registrations || [],
+        total: updatedResponse.data.total_count || 0,
+      });
+
+      alert("Update successful!");
+    } catch (err) {
+      console.error("Update Error:", err);
+      setError(err.response?.data?.message || "Error updating registration");
+    }
+  };
+
   return (
     <div className="mt-6">
       <h2 className="text-xl font-bold">
@@ -85,6 +114,12 @@ const RegistrationList = ({ allExcursions, refresh }) => {
             const excursion = allExcursions.find(
               (ex) => ex.id === reg.excursion_id
             );
+
+            // define canLeaveReview based on the registration date.
+            const registrationDate = new Date(reg.date);
+            const now = new Date();
+            const canLeaveReview = registrationDate < now;
+
             return (
               <div key={reg.id} className="border p-2 mt-2 flex flex-col gap-2">
                 <div className="flex items-center justify-between">
@@ -134,6 +169,31 @@ const RegistrationList = ({ allExcursions, refresh }) => {
                     <option value="Canceled">Cancelled</option>
                     <option value="Closed">Closed</option>
                   </select>
+                )}
+                {canLeaveReview && (
+                  <div>
+                    {openReviewId === reg.id ? (
+                      <div>
+                        <Reviews
+                          registration={reg}
+                          onReviewSubmitted={() => setOpenReviewId(null)}
+                        />
+                        <button
+                          onClick={() => setOpenReviewId(null)}
+                          className="mt-2 bg-gray-500 text-white py-1 px-3 rounded"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setOpenReviewId(reg.id)}
+                        className="mt-2 bg-[#42416f] text-white py-1 px-3 rounded"
+                      >
+                        Leave Review
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             );

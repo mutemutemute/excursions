@@ -1,5 +1,5 @@
 const { body } = require("express-validator");
-const { getExcursionById } = require("../models/excursionModel");
+const { getExcursionByIdModel } = require("../models/excursionModel");
 const validateReview = [
   body("excursion_id")
     .trim()
@@ -8,7 +8,7 @@ const validateReview = [
     .isInt()
     .withMessage("Excursion ID must be a number")
     .custom(async (value) => {
-      const excursion = await getExcursionById(value);
+      const excursion = await getExcursionByIdModel(value);
       if (!excursion) {
         throw new Error("Excursion with this ID does not exist");
       }

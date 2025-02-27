@@ -4,6 +4,7 @@ import axios from "axios";
 import ExcursionContext from "../contexts/ExcursionContext";
 import UserContext from "../contexts/UserContext";
 import RegistrationList from "./RegistrationList";
+import Navbar from "./Navbar";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -19,7 +20,7 @@ const Registration = () => {
 
   const selectedExcursionId = watch("excursion_id");
 
-  // Fetch all excursions (with dates) irrespective of pagination.
+  // Fetch all excursions (with dates) irrespective of pagination
   useEffect(() => {
     const fetchAllExcursions = async () => {
       try {
@@ -37,7 +38,7 @@ const Registration = () => {
     fetchAllExcursions();
   }, []);
 
-  // Update available dates when a new excursion is selected.
+  // Update available dates when a new excursion is selected
   useEffect(() => {
     if (selectedExcursionId) {
       const selectedExcursion = allExcursions.find(
@@ -65,7 +66,7 @@ const Registration = () => {
       reset();
       setError("");
       alert("Registration successful!");
-      // Trigger a refresh in the RegistrationList component.
+      // Trigger a refresh in the RegistrationList component
       setRefreshRegistrations((prev) => !prev);
     } catch (err) {
       console.error("Submission Error:", err);
@@ -74,6 +75,8 @@ const Registration = () => {
   };
 
   return (
+    <>
+    <Navbar/>
     <div className="p-4 max-w-lg mx-auto">
       <h1 className="text-2xl font-bold mb-4">Register for an Excursion</h1>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -119,6 +122,7 @@ const Registration = () => {
 
       {error && <p className="text-red-500 mt-4">{error}</p>}
     </div>
+    </>
   );
 };
 

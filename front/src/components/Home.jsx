@@ -30,8 +30,10 @@ const Home = () => {
             )}
           </>
         )}
-<div><SearchBar /></div>
-        <div className="pt-5">
+        <div className="py-5">
+          <SearchBar />
+        </div>
+        <div claName="pt-5">
           <Excursions />
         </div>
         <div className="pt-10">
