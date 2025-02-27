@@ -162,7 +162,7 @@ exports.registerUserToExcursion = async (req, res, next) => {
 };
 
 exports.updateThisRegistration = async (req, res, next) => {
-  const { id } = req.params;
+  const { registrationId } = req.params;
   const { excursion_date_id, status } = req.body;
 
   const isAdmin = req.user && req.user.role === "admin";
@@ -188,7 +188,7 @@ exports.updateThisRegistration = async (req, res, next) => {
       updatedData = { excursion_date_id };
     }
 
-    const updatedExcursion = await updateRegistration(id, updatedData, isAdmin);
+    const updatedExcursion = await updateRegistration(registrationId, updatedData, isAdmin);
 
     res.status(200).json({
       status: "success",
@@ -200,9 +200,9 @@ exports.updateThisRegistration = async (req, res, next) => {
 };
 
 exports.deleteThisRegistration = async (req, res, next) => {
-  const { id } = req.params;
+  const { registrationId } = req.params;
   try {
-    await deleteRegistration(id);
+    await deleteRegistration(registrationId);
     res.status(200).send();
   } catch (error) {
     next(error);

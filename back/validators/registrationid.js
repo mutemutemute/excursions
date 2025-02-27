@@ -2,7 +2,7 @@ const { param } = require("express-validator");
 const { getRegistrationById } = require("../models/excursionModel");
 
 const validateRegistrationId = [
-  param("id")
+  param("registrationId")
     .isInt({ gt: 0 })
     .withMessage("Id must be a positive integer")
     .bail()

@@ -260,7 +260,7 @@ exports.getUserRegistrationsModel = async (id, limit, offset) => {
 }
 
 exports.updateRegistration = async (
-  id,
+  registrationId,
   updatedRegistration,
   isAdmin = false
 ) => {
@@ -283,7 +283,7 @@ exports.updateRegistration = async (
     [updatedFields] = await sql`
       UPDATE registrations
       SET status = ${updatedRegistration.status}
-      WHERE id = ${id}
+      WHERE id = ${registrationId}
       RETURNING *;
     `;
   } else {
@@ -294,7 +294,7 @@ exports.updateRegistration = async (
     [updatedFields] = await sql`
       UPDATE registrations
       SET excursion_date_id = ${updatedRegistration.excursion_date_id}
-      WHERE id = ${id}
+      WHERE id = ${registrationId}
       RETURNING *;
     `;
   }
@@ -302,10 +302,10 @@ exports.updateRegistration = async (
   return updatedFields;
 };
 
-exports.deleteRegistration = async (id) => {
+exports.deleteRegistration = async (registrationId) => {
   const [registration] = await sql`
       DELETE FROM registrations
-      WHERE registrations.id = ${id}
+      WHERE registrations.id = ${registrationId}
       RETURNING *;
     `;
 
@@ -391,11 +391,11 @@ exports.getUserWithRegistrations = async (id) => {
   return user;
 };
 
-exports.getRegistrationById = async (id) => {
+exports.getRegistrationById = async (registrationId) => {
   const [registration] = await sql`
   SELECT registrations.*
   FROM registrations 
-  WHERE registrations.id = ${id};
+  WHERE registrations.id = ${registrationId};
   `;
   return registration;
 };

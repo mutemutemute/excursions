@@ -69,8 +69,13 @@ router
   )
   .get(protect, validateExcursionId, validate, getExcursionById);
 
+  router
+  .route("/users/:id/registrations")
+  .get(protect, validate, getAllRegistrationsByUser);
+
+// Update / delete a specific registration
 router
-  .route("/register/:id")
+  .route("/register/:registrationId")
   .put(
     protect,
     validateRegistrationId,
@@ -78,13 +83,11 @@ router
     validate,
     updateThisRegistration
   )
-  .delete(protect, validateRegistrationId, validate, deleteThisRegistration)
-  .get(protect, validateUserId, validate, getAllRegistrationsByUser)
-  
+  .delete(protect, validateRegistrationId, validate, deleteThisRegistration);
 
-  
+// Get all excursions for a user
 router
-  .route("/users/:id")
+  .route("/users/:id/excursions")
   .get(
     protect,
     validatePagination,
@@ -93,4 +96,4 @@ router
     getAllExcursionsByUser
   );
 
-  module.exports = router;
+module.exports = router;

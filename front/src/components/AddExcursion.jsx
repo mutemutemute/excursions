@@ -2,7 +2,6 @@ import { useForm, useFieldArray } from "react-hook-form";
 import axios from "axios";
 import { useContext } from "react";
 import ExcursionContext from "../contexts/ExcursionContext";
-import UserContext from "../contexts/UserContext";
 import { FaPlus } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
 
@@ -11,7 +10,6 @@ const API_URL = import.meta.env.VITE_API_URL;
 const AddExcursion = () => {
   const { error, setError, setShowForm, setExcursions, update } =
     useContext(ExcursionContext);
-  const { user } = useContext(UserContext);
 
   const {
     register,
@@ -47,7 +45,7 @@ const AddExcursion = () => {
           time: d.time.length === 5 ? `${d.time}:00` : d.time,
         })),
       };
-     
+
       const response = await axios.post(`${API_URL}/excursions`, payload, {
         withCredentials: true,
       });
